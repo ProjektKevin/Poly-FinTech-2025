@@ -169,19 +169,22 @@ def videoGenFunc(summary_text):
 
 
 summary_text = """
-  Prudential’s Integrated Shield Plan, known as PRUShield, is a health insurance plan in Singapore that works as an enhancement 
-  to MediShield Life — the basic health insurance all Singaporeans and Permanent Residents have. While some people mistakenly think 
-  it only covers cancer-related drugs, that’s not true. PRUShield provides broader hospitalisation coverage, including stays in public 
-  or private hospitals, surgery, specialist consultations, and even pre- and post-hospitalisation treatment. The confusion probably 
-  comes from the Ministry of Health’s recent rule that insurers can only cover cancer drugs listed on the Cancer Drug List if you want 
-  to use MediSave or make insurance claims. But that rule affects all insurers, not just Prudential, and it only applies to cancer 
-  treatments — the rest of the medical coverage remains comprehensive.
+    Oh no, it looks like all your answers were off — but don’t worry! Let’s clear things up together.
 
-    You can also pay for Prudential’s ISP premiums using MediSave, which makes it more affordable for many Singaporeans. There’s a cap to 
-    how much you can use depending on your age and the type of plan, but for most people, part or even all of the premiums for the basic 
-    coverage tier can be paid this way. Also, your premium amount depends on your age — the younger you are when you start the plan, the 
-    lower your premiums will be. This is because health risks increase as you age, so insurers price the plans accordingly. Starting early 
-    not only helps you lock in lower premiums but also gives you peace of mind knowing you’re covered before any major health issues arise.
+    First, Prudential’s Integrated Shield Plan doesn’t only cover cancer-related drugs. It actually provides 
+    much broader coverage — from hospital stays in public or private hospitals, to surgeries, specialist visits, 
+    and even pre- and post-hospitalisation treatment. The confusion probably comes from a new rule that only 
+    certain cancer drugs are claimable under MediSave, but that rule applies to all insurers, not just Prudential.
+
+    Second, yes — you can pay for Prudential’s ISP premiums using MediSave. There are age-based limits, but for 
+    most people, part or even all of your premiums for the basic plan can be paid this way. That makes it more 
+    affordable and accessible.
+
+    And lastly, the premium for Prudential’s ISP is lower when you’re younger. That’s because health risks tend 
+    to go up with age, so insurers adjust their prices accordingly. Getting insured earlier not only locks in lower 
+    premiums — it also gives you peace of mind before health issues can catch you off guard.
+
+    So now you know — getting the right coverage early is not just smart, it’s empowering!
 """
 
 videoGenFunc(summary_text)
