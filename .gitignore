@@ -1,0 +1,10 @@
+.env
+*/node_modules/*
+*/package-lock.json
+*.crt
+
+
+.DS_Store
+
+# data file
+GoogleNews-vectors-negative300.bin.gz
