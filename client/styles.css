@@ -1,0 +1,390 @@
+/* Custom animations and styles for Head Lean Filter Landing Page */
+
+/* Core Animations */
+@keyframes ping {
+    75%, 100% {
+        transform: scale(2);
+        opacity: 0;
+    }
+}
+
+@keyframes pulse {
+    50% {
+        opacity: .5;
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(-25%);
+        animation-timing-function: cubic-bezier(0.8,0,1,1);
+    }
+    50% {
+        transform: none;
+        animation-timing-function: cubic-bezier(0,0,0.2,1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(79, 209, 197, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(79, 209, 197, 0.6);
+    }
+}
+
+/* Animation Classes */
+.animate-ping {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.8s ease-out;
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Animation Delays */
+.delay-1000 {
+    animation-delay: 1s;
+}
+
+.delay-2000 {
+    animation-delay: 2s;
+}
+
+.delay-500 {
+    animation-delay: 0.5s;
+}
+
+.delay-1500 {
+    animation-delay: 1.5s;
+}
+
+/* Gradient Text Effects */
+.gradient-text {
+    background: linear-gradient(135deg, #60a5fa, #4dd0e1, #4ade80);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Play Button Styles */
+.play-button {
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+}
+
+.play-button:hover {
+    transform: scale(1.1) rotate(2deg);
+    background: rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 25px 50px -12px rgba(20, 184, 166, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.play-button:active {
+    transform: scale(1.05) rotate(1deg);
+    transition: transform 0.1s;
+}
+
+.play-button:hover .button-glow {
+    opacity: 0.3;
+}
+
+.play-button:hover .play-icon {
+    width: 56px;
+    height: 56px;
+    transform: translateX(4px);
+}
+
+.play-button:hover .ripple-1 {
+    animation-duration: 0.8s;
+}
+
+.play-button:hover .ripple-2 {
+    animation-duration: 1.2s;
+}
+
+/* Button Components */
+.button-glow {
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+    background: linear-gradient(45deg, #3b82f6, #06b6d4, #10b981);
+}
+
+.play-icon {
+    width: 48px;
+    height: 48px;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    margin-left: 8px;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+    z-index: 10;
+    position: relative;
+}
+
+.shield-background {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(20, 184, 166, 0.2));
+    transition: all 0.3s ease;
+}
+
+.play-button:hover .shield-background {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.4), rgba(20, 184, 166, 0.4));
+    transform: rotate(-2deg);
+}
+
+/* Ripple Effects */
+.ripple-1 {
+    animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.ripple-2 {
+    animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    animation-delay: 1s;
+}
+
+/* Mouse Tracking */
+.mouse-gradient {
+    transition: background 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+}
+
+/* Background Orbs */
+.floating-orb {
+    border-radius: 50%;
+    mix-blend-mode: multiply;
+    filter: blur(40px);
+    animation: float 6s ease-in-out infinite;
+}
+
+.floating-orb:nth-child(1) {
+    animation-delay: 0s;
+    animation-duration: 8s;
+}
+
+.floating-orb:nth-child(2) {
+    animation-delay: 2s;
+    animation-duration: 10s;
+}
+
+.floating-orb:nth-child(3) {
+    animation-delay: 4s;
+    animation-duration: 12s;
+}
+
+/* Medical Cross */
+.medical-cross {
+    opacity: 0.1;
+    transition: opacity 0.3s ease;
+}
+
+.medical-cross:hover {
+    opacity: 0.2;
+}
+
+/* Animated Grid */
+.grid-item {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.grid-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Icon Animations */
+.floating-icon {
+    opacity: 0.2;
+    animation: float 4s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.floating-icon:hover {
+    opacity: 0.4;
+    transform: scale(1.1);
+}
+
+/* Content Sections */
+.main-content {
+    animation: fadeIn 1s ease-out;
+}
+
+.title-section {
+    animation: fadeIn 1.2s ease-out;
+}
+
+.subtitle-section {
+    animation: fadeIn 1.4s ease-out;
+}
+
+.instructions-section {
+    animation: fadeIn 1.6s ease-out;
+}
+
+.description-section {
+    animation: fadeIn 1.8s ease-out;
+}
+
+/* Instruction Cards */
+.instruction-card {
+    transition: all 0.3s ease;
+    backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.instruction-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Step Circles */
+.step-circle {
+    transition: all 0.3s ease;
+}
+
+.step-circle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Bottom Wave Animation */
+.wave-animation {
+    fill: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .play-button {
+        width: 128px;
+        height: 128px;
+    }
+    
+    .play-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .play-button:hover .play-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .floating-orb {
+        filter: blur(20px);
+    }
+    
+    .gradient-text {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .play-button {
+        width: 112px;
+        height: 112px;
+    }
+    
+    .gradient-text {
+        font-size: 2rem;
+    }
+    
+    .instruction-card {
+        padding: 1rem;
+    }
+}
+
+/* Accessibility */
+.play-button:focus {
+    outline: 2px solid #4dd0e1;
+    outline-offset: 4px;
+}
+
+.play-button:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Utility Classes */
+.backdrop-blur-strong {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.border-glow {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.hover-lift {
+    transition: transform 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+}
