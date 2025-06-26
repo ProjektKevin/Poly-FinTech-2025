@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="/face-api.js"></script>
+  <!-- Load face-api.js from your local dist folder -->
+  <script src="/dist/face-api.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.css">
   <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
@@ -76,194 +77,120 @@
     
     /* Question Display */
     .question-display {
-      background: rgba(0, 0, 0, 0.9);
-      color: white;
+      background: rgba(255, 255, 255, 0.1);
       padding: 20px 30px;
-      border-radius: 15px;
-      font-size: 24px;
-      font-weight: bold;
+      border-radius: 10px;
+      font-size: 18px;
       text-align: center;
-      min-width: 400px;
       max-width: 640px;
-      border: 3px solid #4488ff;
-      animation: questionPulse 2s infinite;
-      margin: 0;
+      margin: 10px 0;
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
     
-    @keyframes questionPulse {
-      0%, 100% { 
-        box-shadow: 0 0 20px rgba(68, 136, 255, 0.5);
-        transform: scale(1);
-      }
-      50% { 
-        box-shadow: 0 0 40px rgba(68, 136, 255, 0.8);
-        transform: scale(1.02);
-      }
-    }
-    
-    /* Position indicators */
+    /* Position Indicators */
     .position-indicator {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 80px;
-      height: 80px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
       font-weight: bold;
-      opacity: 0.3;
+      font-size: 14px;
       transition: all 0.3s ease;
+      z-index: 10;
+      opacity: 0.7;
     }
     
     .left-indicator {
-      left: -100px;
-      background: linear-gradient(45deg, #ff4444, #cc2222);
+      left: -80px;
+      background: #ff4444;
       color: white;
     }
     
     .right-indicator {
-      right: -100px;
-      background: linear-gradient(45deg, #00ff88, #00cc66);
-      color: white;
+      right: -80px;
+      background: #00ff88;
+      color: black;
     }
     
     .indicator-active {
       opacity: 1;
       transform: translateY(-50%) scale(1.2);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
     }
     
-    /* Results display */
-    .results-container {
-      background: rgba(0, 0, 0, 0.8);
-      padding: 20px;
-      border-radius: 15px;
-      border: 2px solid #4488ff;
-      max-width: 600px;
-      text-align: center;
-      margin-top: 20px;
-    }
-    
-    .result-item {
-      margin: 10px 0;
-      padding: 10px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .answer-badge {
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-weight: bold;
-      color: white;
-    }
-    
-    .yes-badge {
-      background: #00ff88;
-    }
-    
-    .no-badge {
-      background: #ff4444;
-    }
-    
+    /* Status Display */
     .status-display {
-      color: white;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 14px;
       text-align: center;
-      font-size: 16px;
+      max-width: 640px;
       margin-top: 10px;
     }
     
+    /* Game Instructions */
     .game-instructions {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
       border-radius: 10px;
       text-align: center;
-      max-width: 600px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
     }
     
-    .progress {
-      margin: 10px 0;
-      width: 100%;
-      max-width: 400px;
+    .game-instructions h5 {
+      margin: 0 0 10px 0;
+      color: #00ff88;
     }
-
-    .restart-btn {
+    
+    .game-instructions p {
+      margin: 5px 0;
+    }
+    
+    /* Progress Bar */
+    .progress {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    
+    .indeterminate {
+      background-color: #00ff88;
+    }
+    
+    /* Results */
+    .results-container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
       margin-top: 20px;
-      background: #4488ff;
-      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .restart-btn {
+      background: #00ff88;
+      color: black;
       border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: bold;
       cursor: pointer;
-      font-size: 16px;
+      margin-top: 15px;
+      transition: all 0.3s ease;
     }
     
     .restart-btn:hover {
-      background: #5599ff;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-      
-      #inputVideo {
-        width: 95vw;
-        max-width: none;
-        height: auto;
-        min-height: 60vh;
-      }
-      
-      .video-container {
-        width: 95vw;
-        max-width: none;
-      }
-      
-      .question-display {
-        font-size: 18px;
-        min-width: 200px;
-        max-width: 95vw;
-        padding: 15px 20px;
-      }
-      
-      .left-indicator, .right-indicator {
-        width: 50px;
-        height: 50px;
-        font-size: 14px;
-      }
-      
-      .left-indicator {
-        left: -60px;
-      }
-      
-      .right-indicator {
-        right: -60px;
-      }
-      
-      .game-instructions {
-        max-width: 95vw;
-        padding: 10px;
-      }
-      
-      .results-container {
-        max-width: 95vw;
-      }
+      background: #00cc66;
+      transform: scale(1.05);
     }
     
-    /* Extra small screens */
-    @media (max-width: 480px) {
-      #inputVideo {
-        width: 98vw;
-        min-height: 50vh;
-      }
-      
+    /* Responsive */
+    @media (max-width: 768px) {
       .video-container {
         width: 98vw;
       }
@@ -311,7 +238,7 @@
         <div class="position-indicator right-indicator" id="rightIndicator">YES</div>
       </div>
       
-      <!-- Question Display - Now directly below video with minimal gap -->
+      <!-- Question Display -->
       <div class="question-display" id="questionDisplay" style="display: none;">
         Question will appear here
       </div>
@@ -329,11 +256,20 @@
   </div>
 
   <script>
+    // Check if face-api is loaded
+    if (typeof faceapi === 'undefined') {
+      document.getElementById('statusDisplay').textContent = 'Error: Face-API library failed to load. Please check your internet connection.';
+      document.getElementById('loader').style.display = 'none';
+      throw new Error('Face-API library not loaded');
+    }
+
     // Game state
     const questions = [
       "Do you like pizza?",
       "Are you over 18 years old?",
-      "Do you enjoy playing video games?"
+      "Do you enjoy playing video games?",
+      "Do you prefer cats over dogs?",
+      "Is today a good day for you?"
     ];
     
     let currentQuestionIndex = 0;
@@ -342,13 +278,13 @@
     let gameEnded = false;
     let positionHoldTime = 0;
     let currentPosition = 'center';
-    let holdThreshold = 1000; // 1 second (changed from 2 seconds)
-    let lastPositionTime = 0;
+    let holdThreshold = 1500; // 1.5 seconds
+    let lastPositionTime = Date.now();
 
     // Face detection variables
     let forwardTimes = [];
     const faceDetectorOptions = new faceapi.TinyFaceDetectorOptions({
-      inputSize: 608,
+      inputSize: 416,
       scoreThreshold: 0.5
     });
 
@@ -359,7 +295,7 @@
       
       if (!gameEnded) {
         document.getElementById('statusDisplay').innerHTML = `
-          Detection: ${Math.round(avgTimeInMs)}ms | FPS: ${fps} | Question ${currentQuestionIndex + 1}/3
+          Detection: ${Math.round(avgTimeInMs)}ms | FPS: ${fps} | Question ${currentQuestionIndex + 1}/${questions.length}
         `;
       }
     }
@@ -371,12 +307,9 @@
       const canvas = document.getElementById('overlay');
       const canvasWidth = canvas.width;
       const centerX = canvasWidth / 2;
-      const threshold = canvasWidth * 0.15;
+      const threshold = canvasWidth * 0.2;
       
-      console.log(`Face X: ${faceX}, Center: ${centerX}, Left threshold: ${centerX - threshold}, Right threshold: ${centerX + threshold}`);
-      
-      // Since the video is mirrored, we DON'T need to invert the logic here
-      // The face-api detection coordinates are already in the mirrored space
+      // Since the video is mirrored, face positions are inverted
       if (faceX < centerX - threshold) {
         return 'left';
       } else if (faceX > centerX + threshold) {
@@ -412,6 +345,22 @@
       }
     }
 
+    function startGame() {
+      if (!gameStarted && !gameEnded) {
+        gameStarted = true;
+        showQuestion();
+        document.getElementById('instructions').style.display = 'none';
+      }
+    }
+
+    function showQuestion() {
+      if (currentQuestionIndex < questions.length) {
+        const questionDisplay = document.getElementById('questionDisplay');
+        questionDisplay.textContent = questions[currentQuestionIndex];
+        questionDisplay.style.display = 'block';
+      }
+    }
+
     function handlePositionHold(position) {
       const now = Date.now();
       
@@ -421,156 +370,107 @@
         // Update status to show hold progress
         const progress = Math.min(100, (positionHoldTime / holdThreshold) * 100);
         const answer = position === 'right' ? 'YES' : 'NO';
-        document.getElementById('statusDisplay').innerHTML += ` | Holding ${answer}: ${Math.round(progress)}%`;
         
-        // If held long enough, record answer
         if (positionHoldTime >= holdThreshold) {
-          recordAnswer(position === 'right');
+          // Answer confirmed
+          answers.push({
+            question: questions[currentQuestionIndex],
+            answer: answer,
+            position: position
+          });
+          
+          // Reset hold time
+          positionHoldTime = 0;
+          
+          // Move to next question or end game
+          currentQuestionIndex++;
+          if (currentQuestionIndex >= questions.length) {
+            endGame();
+          } else {
+            showQuestion();
+          }
         }
       } else {
-        currentPosition = position;
         positionHoldTime = 0;
       }
       
       lastPositionTime = now;
     }
 
-    function recordAnswer(isYes) {
-      answers.push({
-        question: questions[currentQuestionIndex],
-        answer: isYes
-      });
-      
-      currentQuestionIndex++;
-      positionHoldTime = 0;
-      
-      if (currentQuestionIndex >= questions.length) {
-        endGame();
-      } else {
-        showNextQuestion();
-      }
-    }
-
-    function showNextQuestion() {
-      const questionDisplay = document.getElementById('questionDisplay');
-      questionDisplay.textContent = questions[currentQuestionIndex];
-      questionDisplay.style.display = 'block';
-    }
-
-    function startGame() {
-      gameStarted = true;
-      gameEnded = false;
-      currentQuestionIndex = 0;
-      answers = [];
-      
-      document.getElementById('instructions').style.display = 'none';
-      showNextQuestion();
-    }
-
     function endGame() {
       gameEnded = true;
-      document.getElementById('questionDisplay').style.display = 'none';
-      document.getElementById('videoContainer').className = 'video-container neutral';
+      gameStarted = false;
       
-      showResults();
-    }
-
-    function showResults() {
+      // Hide question display
+      document.getElementById('questionDisplay').style.display = 'none';
+      
+      // Show results
       const resultsContainer = document.getElementById('resultsContainer');
       const resultsList = document.getElementById('resultsList');
       
-      resultsList.innerHTML = '';
-      
-      answers.forEach((item, index) => {
-        const resultItem = document.createElement('div');
-        resultItem.className = 'result-item';
-        
-        const answerBadge = document.createElement('span');
-        answerBadge.className = `answer-badge ${item.answer ? 'yes-badge' : 'no-badge'}`;
-        answerBadge.textContent = item.answer ? 'YES' : 'NO';
-        
-        resultItem.innerHTML = `
-          <span>${item.question}</span>
+      let resultsHTML = '';
+      answers.forEach((answer, index) => {
+        resultsHTML += `
+          <p><strong>Q${index + 1}:</strong> ${answer.question}</p>
+          <p style="color: ${answer.answer === 'YES' ? '#00ff88' : '#ff4444'}"><strong>Your Answer: ${answer.answer}</strong></p>
+          <hr>
         `;
-        resultItem.appendChild(answerBadge);
-        
-        resultsList.appendChild(resultItem);
       });
       
+      resultsList.innerHTML = resultsHTML;
       resultsContainer.style.display = 'block';
-      document.getElementById('statusDisplay').textContent = 'Game Complete! Check your answers above.';
+      
+      document.getElementById('statusDisplay').textContent = 'Game completed! See your results above.';
     }
 
     function restartGame() {
-      document.getElementById('resultsContainer').style.display = 'none';
-      document.getElementById('instructions').style.display = 'block';
-      gameStarted = false;
-      gameEnded = false;
+      // Reset game state
       currentQuestionIndex = 0;
       answers = [];
+      gameStarted = false;
+      gameEnded = false;
       positionHoldTime = 0;
+      currentPosition = 'center';
+      
+      // Hide results and show instructions
+      document.getElementById('resultsContainer').style.display = 'none';
+      document.getElementById('instructions').style.display = 'block';
+      document.getElementById('questionDisplay').style.display = 'none';
+      
+      // Reset visual effects
+      applyVisualEffects('center');
+      
+      document.getElementById('statusDisplay').textContent = 'Face detection ready! Position your face in the camera to start the game.';
     }
 
     async function onPlay() {
       const videoEl = document.getElementById('inputVideo');
-
-      if(videoEl.paused || videoEl.ended)
-        return setTimeout(() => onPlay(), 100);
+      const canvas = document.getElementById('overlay');
+      
+      if (videoEl.paused || videoEl.ended) {
+        setTimeout(() => onPlay(), 100);
+        return;
+      }
 
       const ts = Date.now();
       const result = await faceapi.detectSingleFace(videoEl, faceDetectorOptions);
-
       updateTimeStats(Date.now() - ts);
 
       if (result) {
-        const canvas = document.getElementById('overlay');
-        const dims = faceapi.matchDimensions(canvas, videoEl, true);
+        // Setup canvas dimensions
+        const displaySize = { width: videoEl.videoWidth, height: videoEl.videoHeight };
+        faceapi.matchDimensions(canvas, displaySize);
         
-        // Ensure canvas matches video dimensions exactly
-        canvas.width = videoEl.videoWidth || videoEl.clientWidth;
-        canvas.height = videoEl.videoHeight || videoEl.clientHeight;
-        
-        // Clear previous drawings
+        // Clear and draw detection
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Draw the detection box
-        const resizedResult = faceapi.resizeResults(result, dims);
+        const resizedResult = faceapi.resizeResults(result, displaySize);
+        faceapi.draw.drawDetections(canvas, resizedResult);
         
-        // Draw position indicators on canvas
-        const box = resizedResult.box;
-        const faceX = box.x + box.width / 2;
-        const centerX = canvas.width / 2;
-        const threshold = canvas.width * 0.15;
-        
-        ctx.strokeStyle = '#4488ff';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        
-        // Draw center line
-        ctx.beginPath();
-        ctx.moveTo(centerX, 0);
-        ctx.lineTo(centerX, canvas.height);
-        ctx.stroke();
-        
-        // Draw threshold lines
-        ctx.strokeStyle = '#ff4444';
-        ctx.beginPath();
-        ctx.moveTo(centerX - threshold, 0);
-        ctx.lineTo(centerX - threshold, canvas.height);
-        ctx.stroke();
-        
-        ctx.strokeStyle = '#00ff88';
-        ctx.beginPath();
-        ctx.moveTo(centerX + threshold, 0);
-        ctx.lineTo(centerX + threshold, canvas.height);
-        ctx.stroke();
-        
-        // Reset line dash
-        ctx.setLineDash([]);
-        
-        // Get position and apply effects
+        // Get position and handle game logic
         const position = getPositionFromDetection(result);
+        currentPosition = position;
         applyVisualEffects(position);
         
         // Start game when face is detected for the first time
@@ -592,18 +492,23 @@
         }
       }
 
-      setTimeout(() => onPlay(), 100);
+      setTimeout(() => onPlay(), 150);
     }
 
     async function run() {
       try {
-        // Load face detection model
-        await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/');
+        console.log('Loading face detection model...');
+        
+        // Load face detection model from local weights
+        await faceapi.nets.tinyFaceDetector.loadFromUri('/weights/');
+        
+        console.log('Face detection model loaded successfully');
         
         // Hide loader
         document.getElementById('loader').style.display = 'none';
         
         // Access webcam
+        console.log('Requesting camera access...');
         const stream = await navigator.mediaDevices.getUserMedia({ 
           video: { width: 640, height: 480 } 
         });
@@ -612,6 +517,7 @@
         
         // Start detection when video loads
         videoEl.onloadedmetadata = () => {
+          console.log('Video loaded, starting face detection...');
           onPlay();
         };
         
@@ -620,11 +526,15 @@
       } catch (error) {
         console.error('Error initializing:', error);
         document.getElementById('statusDisplay').textContent = 'Error: ' + error.message;
+        document.getElementById('loader').style.display = 'none';
       }
     }
 
     // Start when page loads
-    document.addEventListener('DOMContentLoaded', run);
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Page loaded, initializing...');
+      run();
+    });
   </script>
 </body>
 </html>
