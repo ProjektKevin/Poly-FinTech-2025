@@ -21,6 +21,11 @@ app.use('/views', express.static(path.join(__dirname, './views')))
 // Serve CSS file from root directory
 app.use('/styles.css', express.static(path.join(__dirname, 'styles.css')))
 
+// Serve video files directly
+app.use('/videos', express.static(path.join(__dirname, './public/videos')))
+app.use('/audios', express.static(path.join(__dirname, './public/audios')))
+app.use('/gifs', express.static(path.join(__dirname, './public/gifs')))
+
 // Serve the main index page (HTML version)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'))
