@@ -138,7 +138,6 @@ def create_video_with_audio(local_gif_paths, audio_path, output_path, duration):
             audio_clip = audio_clip.subclipped(0, video_clip.duration)
         
         # If audio is shorter than video, loop it properly
-        # If audio is shorter than video, loop it properly
         elif audio_clip.duration < video_clip.duration:
             # Calculate how many times we need to loop
             loops_needed = int(video_clip.duration / audio_clip.duration) + 1
@@ -196,17 +195,8 @@ output_video_path, summary_text = main(summary_text)
 if output_video_path and os.path.exists(output_video_path):
     print("✅ Video generated successfully!")
     print(f"📁 Video saved at: {output_video_path}")
-    print(f"📝 Source text: {processed_text}")
+    print(f"📝 Source text: {summary_text}")
     print("\n🎬 Video file ready to view!")
 else:
     print("❌ Failed to generate video. Check the logs above for details.")
 
-
-# if output_video_path and os.path.exists(output_video_path):
-#     st.title("Converting Raw Data Into New Knowledge")
-#     st.video(output_video_path)
-#     st.success("Here is your generated video!")
-#     st.subheader("Summary of the PDF:")
-#     st.write(summary_text)
-# else:
-#     st.error("Failed to generate video. Please check the logs for more details.")
