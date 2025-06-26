@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const IndexPage = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -18,8 +20,8 @@ const IndexPage = () => {
   }, []);
 
   const handlePlayClick = () => {
-    // Navigate to the shield plans learning game
     console.log('Starting Shield Quest game!');
+    navigate('/game');
   };
 
   return (

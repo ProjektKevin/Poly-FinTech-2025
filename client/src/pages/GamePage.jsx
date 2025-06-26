@@ -1,272 +1,275 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Camera, CheckCircle, XCircle, RotateCcw, Trophy, Timer } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, RotateCcw, Shield } from 'lucide-react';
 
 const GamePage = () => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState(0);
-  const [headPosition, setHeadPosition] = useState('center');
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [gameState, setGameState] = useState('setup'); // setup, playing, finished
-  const [timeLeft, setTimeLeft] = useState(10);
-  const [streak, setStreak] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [cameraPermission, setCameraPermission] = useState('pending');
+  const [gameStarted, setGameStarted] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState([]);
+  const [currentPosition, setCurrentPosition] = useState('center');
+  const [positionHoldTime, setPositionHoldTime] = useState(0);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [faceDetected, setFaceDetected] = useState(false);
 
   const questions = [
-    {
-      id: 1,
-      question: "Integrated Shield Plans provide coverage beyond basic MediShield Life benefits",
-      answer: true,
-      explanation: "Correct! Integrated Shield Plans (IPs) are designed to provide enhanced coverage above and beyond MediShield Life."
-    },
-    {
-      id: 2,
-      question: "You can only purchase Integrated Shield Plans after age 65",
-      answer: false,
-      explanation: "False! You can purchase IPs at various ages, though premiums may vary based on when you enroll."
-    },
-    {
-      id: 3,
-      question: "Integrated Shield Plans can help cover private hospital treatments",
-      answer: true,
-      explanation: "True! Many IPs provide coverage for private hospital treatments and specialist care."
-    }
+    "Do you enjoy playing video games? 🎮",
+    "Is pizza your favorite food? 🍕",
+    "Are you currently feeling happy? 😊",
+    "Do you prefer cats over dogs? 🐱",
+    "Is today a good day for you? ☀️"
   ];
 
-  // Camera setup
-  useEffect(() => {
-    if (cameraActive) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => stopCamera();
-  }, [cameraActive]);
+  const holdThreshold = 1500; // 1.5 seconds
+  const lastPositionTimeRef = useRef(Date.now());
+  const faceDetectorOptionsRef = useRef(null);
+  const animationFrameRef = useRef(null);
 
-  // Timer effect
   useEffect(() => {
-    let timer;
-    if (gameState === 'playing' && timeLeft > 0) {
-      timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-    } else if (timeLeft === 0 && gameState === 'playing') {
-      handleTimeout();
-    }
-    return () => clearTimeout(timer);
-  }, [timeLeft, gameState]);
+    return () => {
+      // Cleanup
+      if (videoRef.current && videoRef.current.srcObject) {
+        const tracks = videoRef.current.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+      if (animationFrameRef.current) {
+        clearTimeout(animationFrameRef.current);
+      }
+    };
+  }, []);
 
-  const startCamera = async () => {
+  const requestCameraPermission = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { width: 640, height: 480 } 
-      });
+      setCameraPermission('pending');
+      // Don't show loading until we actually start loading models
+      
+      const constraints = {
+        video: {
+          width: { ideal: 640 }, // Reduced resolution for faster processing
+          height: { ideal: 480 },
+          facingMode: { ideal: 'user' }
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          detectMotion();
+        videoRef.current.onloadedmetadata = async () => {
+          setCameraPermission('granted');
+          setIsLoading(true); // Only show loading when we start loading models
+          await initializeFaceAPI();
         };
       }
+      
     } catch (error) {
       console.error('Camera access denied:', error);
-      alert('Camera access is required for this game. Please allow camera permissions.');
+      setCameraPermission('denied');
+      setIsLoading(false);
     }
   };
 
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
+  const initializeFaceAPI = async () => {
+    try {
+      if (!window.faceapi) {
+        throw new Error('face-api.js library not loaded');
+      }
+
+      // Load face detection model from local weights folder (much faster)
+      await window.faceapi.nets.tinyFaceDetector.loadFromUri('/weights/');
+      
+      faceDetectorOptionsRef.current = new window.faceapi.TinyFaceDetectorOptions({
+        inputSize: 416, // Reduced for faster processing
+        scoreThreshold: 0.5
+      });
+
+      setIsLoading(false);
+      startDetection();
+    } catch (error) {
+      console.error('Error initializing face detection:', error);
+      setIsLoading(false);
+      alert('Failed to load face detection. Please refresh the page and try again.');
     }
   };
 
-  const detectMotion = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+  const getPositionFromDetection = (detection) => {
+    const box = detection.box;
+    const faceX = box.x + box.width / 2;
+    const videoEl = videoRef.current;
     
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    if (!videoEl) return 'center';
     
-    let previousFrame = null;
-    let leftMovement = 0;
-    let rightMovement = 0;
-    let centerPosition = 0;
+    const centerX = videoEl.videoWidth / 2;
+    const threshold = videoEl.videoWidth * 0.2;
+    
+    if (faceX < centerX - threshold) {
+      return 'left';
+    } else if (faceX > centerX + threshold) {
+      return 'right';
+    } else {
+      return 'center';
+    }
+  };
 
-    const analyze = () => {
-      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
-        requestAnimationFrame(analyze);
+  const handlePositionHold = (position) => {
+    const now = Date.now();
+    
+    if (position === currentPosition && (position === 'left' || position === 'right')) {
+      const timeDelta = now - lastPositionTimeRef.current;
+      const newHoldTime = positionHoldTime + timeDelta;
+      setPositionHoldTime(newHoldTime);
+      
+      const progress = Math.min(100, (newHoldTime / holdThreshold) * 100);
+      setHoldProgress(progress);
+      
+      // Answer confirmed
+      if (newHoldTime >= holdThreshold) {
+        const answer = position === 'right';
+        
+        setAnswers(prev => [...prev, { 
+          question: questions[currentQuestionIndex],
+          answer: answer ? 'YES' : 'NO'
+        }]);
+        
+        setPositionHoldTime(0);
+        setHoldProgress(0);
+        setCurrentPosition('center');
+        
+        // Move to next question or end game
+        if (currentQuestionIndex + 1 >= questions.length) {
+          setGameEnded(true);
+        } else {
+          setCurrentQuestionIndex(prev => prev + 1);
+        }
+      }
+    } else {
+      setPositionHoldTime(0);
+      setHoldProgress(0);
+    }
+    
+    lastPositionTimeRef.current = now;
+  };
+
+  const startDetection = async () => {
+    const detect = async () => {
+      const videoEl = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      if (!videoEl || !canvas || videoEl.paused || videoEl.ended || !faceDetectorOptionsRef.current) {
+        animationFrameRef.current = setTimeout(detect, 200); // Slower retry when not ready
         return;
       }
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      
-      const currentFrame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      if (previousFrame) {
-        const diff = calculateFrameDifference(previousFrame, currentFrame);
-        const movement = analyzeMovement(diff);
-        
-        // Update movement tracking
-        if (movement.direction === 'left') {
-          leftMovement += movement.intensity;
-          rightMovement = Math.max(0, rightMovement - 1);
-          centerPosition = 0;
-        } else if (movement.direction === 'right') {
-          rightMovement += movement.intensity;
-          leftMovement = Math.max(0, leftMovement - 1);
-          centerPosition = 0;
-        } else {
-          leftMovement = Math.max(0, leftMovement - 1);
-          rightMovement = Math.max(0, rightMovement - 1);
-          centerPosition++;
-        }
+      try {
+        const result = await window.faceapi.detectSingleFace(videoEl, faceDetectorOptionsRef.current);
 
-        // Determine head position
-        if (leftMovement > 15) {
-          setHeadPosition('left');
-          if (gameState === 'playing' && !selectedAnswer) {
-            handleAnswer(false);
+        if (result) {
+          setFaceDetected(true);
+          
+          // Only setup canvas once or when dimensions change
+          if (canvas.width !== videoEl.videoWidth || canvas.height !== videoEl.videoHeight) {
+            canvas.width = videoEl.videoWidth;
+            canvas.height = videoEl.videoHeight;
           }
-        } else if (rightMovement > 15) {
-          setHeadPosition('right');
-          if (gameState === 'playing' && !selectedAnswer) {
-            handleAnswer(true);
+          
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          // Skip drawing detection box for better performance
+          // window.faceapi.draw.drawDetections(canvas, resizedResult);
+          
+          // Get position and handle game logic
+          const position = getPositionFromDetection(result);
+          setCurrentPosition(position);
+          
+          // Start game when face is detected
+          if (!gameStarted && !gameEnded) {
+            setGameStarted(true);
           }
-        } else if (centerPosition > 10) {
-          setHeadPosition('center');
+          
+          // Handle position holding
+          if (gameStarted && !gameEnded) {
+            handlePositionHold(position);
+          }
+        } else {
+          setFaceDetected(false);
+          setCurrentPosition('center');
+          setPositionHoldTime(0);
+          setHoldProgress(0);
         }
+      } catch (error) {
+        console.error('Detection error:', error);
       }
-      
-      previousFrame = currentFrame;
-      if (cameraActive) {
-        requestAnimationFrame(analyze);
-      }
+
+      // Run detection every 150ms instead of 100ms for better performance
+      animationFrameRef.current = setTimeout(detect, 150);
     };
 
-    analyze();
+    detect();
   };
 
-  const calculateFrameDifference = (prev, curr) => {
-    const diff = [];
-    for (let i = 0; i < prev.data.length; i += 4) {
-      const prevGray = (prev.data[i] + prev.data[i + 1] + prev.data[i + 2]) / 3;
-      const currGray = (curr.data[i] + curr.data[i + 1] + curr.data[i + 2]) / 3;
-      diff.push(Math.abs(prevGray - currGray));
+  const restartGame = () => {
+    setGameStarted(false);
+    setGameEnded(false);
+    setCurrentQuestionIndex(0);
+    setAnswers([]);
+    setPositionHoldTime(0);
+    setHoldProgress(0);
+    setCurrentPosition('center');
+  };
+
+  const getVideoContainerClass = () => {
+    let baseClass = "relative w-full overflow-hidden transition-all duration-300 rounded-2xl ";
+    
+    switch(currentPosition) {
+      case 'left':
+        return baseClass + "ring-4 ring-red-400 shadow-xl shadow-red-400/30";
+      case 'right':
+        return baseClass + "ring-4 ring-green-400 shadow-xl shadow-green-400/30";
+      default:
+        return baseClass + "ring-2 ring-white/20";
     }
-    return diff;
   };
 
-  const analyzeMovement = (diff) => {
-    const leftSide = diff.slice(0, diff.length / 2);
-    const rightSide = diff.slice(diff.length / 2);
-    
-    const leftMovement = leftSide.reduce((sum, val) => sum + val, 0);
-    const rightMovement = rightSide.reduce((sum, val) => sum + val, 0);
-    
-    const threshold = 5000;
-    
-    if (leftMovement > rightMovement && leftMovement > threshold) {
-      return { direction: 'left', intensity: Math.min(leftMovement / 1000, 10) };
-    } else if (rightMovement > leftMovement && rightMovement > threshold) {
-      return { direction: 'right', intensity: Math.min(rightMovement / 1000, 10) };
-    }
-    
-    return { direction: 'center', intensity: 0 };
-  };
+  // Loading Screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-purple-900 to-indigo-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-20 w-20 border-b-2 border-white mx-auto mb-6"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Camera size={32} className="text-white" />
+            </div>
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Loading Face Detection...</h2>
+          <p className="text-white/70 text-sm">This will only take a few seconds</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleAnswer = (userAnswer) => {
-    if (selectedAnswer !== null) return;
-    
-    const correct = userAnswer === questions[currentQuestion].answer;
-    setSelectedAnswer(userAnswer);
-    
-    if (correct) {
-      setScore(score + 100);
-      setStreak(streak + 1);
-    } else {
-      setStreak(0);
-    }
-
-    setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-        setSelectedAnswer(null);
-        setTimeLeft(10);
-      } else {
-        setGameState('finished');
-      }
-    }, 2000);
-  };
-
-  const handleTimeout = () => {
-    setSelectedAnswer('timeout');
-    setStreak(0);
-    setTimeout(() => {
-      if (currentQuestion < questions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
-        setSelectedAnswer(null);
-        setTimeLeft(10);
-      } else {
-        setGameState('finished');
-      }
-    }, 2000);
-  };
-
-  const startGame = () => {
-    setCameraActive(true);
-    setGameState('playing');
-    setCurrentQuestion(0);
-    setScore(0);
-    setStreak(0);
-    setTimeLeft(10);
-    setSelectedAnswer(null);
-  };
-
-  const resetGame = () => {
-    setGameState('setup');
-    setCameraActive(false);
-    setCurrentQuestion(0);
-    setScore(0);
-    setStreak(0);
-    setSelectedAnswer(null);
-  };
-
-  if (gameState === 'setup') {
+  // Camera Permission Screen
+  if (cameraPermission === 'pending' && !videoRef.current?.srcObject) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-900 to-green-900 flex items-center justify-center p-4">
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="max-w-md mx-auto text-center">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
-            <Camera size={64} className="mx-auto text-white mb-6" />
-            <h1 className="text-4xl font-bold text-white mb-4">Shield Quest Challenge</h1>
-            <p className="text-white/80 mb-6 text-lg">
-              Test your knowledge about Integrated Shield Plans using head movements!
+            <Shield size={64} className="mx-auto text-white mb-6" />
+            <h1 className="text-3xl font-bold text-white mb-4">Head Lean Filter</h1>
+            <p className="text-white/80 mb-6">
+              Lean your head LEFT for NO, RIGHT for YES!<br/>
+              We need camera access to track your head movements.
             </p>
-            
-            <div className="bg-white/5 rounded-2xl p-6 mb-6">
-              <h3 className="text-white font-semibold mb-4">How to Play:</h3>
-              <div className="grid md:grid-cols-2 gap-4 text-sm text-white/80">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-red-500/30 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">←</span>
-                  </div>
-                  <span>Lean LEFT for FALSE</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-green-500/30 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold">→</span>
-                  </div>
-                  <span>Lean RIGHT for TRUE</span>
-                </div>
-              </div>
-            </div>
-            
             <button
-              onClick={startGame}
-              className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-blue-600 hover:to-teal-600 transition-all duration-300 shadow-lg"
+              onClick={requestCameraPermission}
+              className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-blue-600 hover:to-teal-600 transition-all duration-300 shadow-lg w-full flex items-center justify-center space-x-2"
             >
-              Start Game
+              <Camera size={24} />
+              <span>Allow Camera Access</span>
             </button>
           </div>
         </div>
@@ -274,38 +277,58 @@ const GamePage = () => {
     );
   }
 
-  if (gameState === 'finished') {
+  // Camera Permission Denied
+  if (cameraPermission === 'denied') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-900 to-green-900 flex items-center justify-center p-4">
-        <div className="max-w-2xl mx-auto text-center">
+      <div className="min-h-screen bg-gradient-to-br from-red-900 via-pink-900 to-purple-900 flex items-center justify-center p-4">
+        <div className="max-w-md mx-auto text-center">
           <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
-            <Trophy size={64} className="mx-auto text-yellow-400 mb-6" />
-            <h1 className="text-4xl font-bold text-white mb-4">Game Complete!</h1>
+            <XCircle size={64} className="mx-auto text-red-400 mb-6" />
+            <h1 className="text-3xl font-bold text-white mb-4">Camera Access Required</h1>
+            <p className="text-white/80 mb-6">
+              Please allow camera access in your browser settings and refresh the page.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition-all duration-300"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Game Results Screen
+  if (gameEnded) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-500 via-teal-500 to-blue-500 flex items-center justify-center p-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30">
+            <CheckCircle size={80} className="mx-auto text-green-300 mb-6" />
+            <h1 className="text-4xl font-bold text-white mb-6">All Done!</h1>
             
-            <div className="bg-white/5 rounded-2xl p-6 mb-6">
-              <div className="text-2xl font-bold text-white mb-2">Final Score: {score}</div>
-              <div className="text-white/80">
-                You answered {questions.filter((q, i) => {
-                  // This is simplified - in a real app you'd track actual answers
-                  return score > 0;
-                }).length} out of {questions.length} questions correctly!
+            {/* Show Answers */}
+            <div className="bg-white/10 rounded-2xl p-6 mb-6">
+              <h3 className="text-xl font-bold text-white mb-4">Your Answers:</h3>
+              <div className="space-y-3">
+                {answers.map((answer, index) => (
+                  <div key={index} className="bg-white/10 rounded-lg p-3">
+                    <div className="text-white font-medium">{answer.question}</div>
+                    <div className={`text-lg font-bold ${answer.answer === 'YES' ? 'text-green-300' : 'text-red-300'}`}>
+                      {answer.answer}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <div className="space-y-4 mb-6">
-              {questions.map((q, index) => (
-                <div key={q.id} className="bg-white/5 rounded-xl p-4 text-left">
-                  <div className="text-white font-medium mb-2">Q{index + 1}: {q.question}</div>
-                  <div className="text-sm text-white/80">{q.explanation}</div>
-                </div>
-              ))}
-            </div>
-            
             <button
-              onClick={resetGame}
-              className="bg-gradient-to-r from-blue-500 to-teal-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-blue-600 hover:to-teal-600 transition-all duration-300 shadow-lg flex items-center space-x-2 mx-auto"
+              onClick={restartGame}
+              className="bg-gradient-to-r from-white to-gray-100 text-gray-800 px-8 py-4 rounded-full text-xl font-bold hover:scale-105 transition-all duration-300 shadow-xl flex items-center justify-center space-x-3 mx-auto"
             >
-              <RotateCcw size={20} />
+              <RotateCcw size={24} />
               <span>Play Again</span>
             </button>
           </div>
@@ -314,130 +337,90 @@ const GamePage = () => {
     );
   }
 
+  // Main Game Interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-teal-900 to-green-900 p-4">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-6">
-        <div className="flex justify-between items-center bg-white/10 backdrop-blur-lg rounded-2xl p-4 border border-white/20">
-          <div className="flex items-center space-x-4">
-            <div className="text-white">
-              <span className="text-sm opacity-80">Question</span>
-              <div className="text-xl font-bold">{currentQuestion + 1}/{questions.length}</div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600">
+      
+      {/* Current Question */}
+      {gameStarted && (
+        <div className="absolute top-4 left-0 right-0 z-10 p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30 text-center">
+              <div className="text-white/80 text-sm mb-2">
+                Question {currentQuestionIndex + 1} of {questions.length}
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white">
+                {questions[currentQuestionIndex]}
+              </h2>
+              <div className="mt-4 text-white/90">
+                👈 Lean LEFT for NO • Lean RIGHT for YES 👉
+              </div>
             </div>
-            <div className="text-white">
-              <span className="text-sm opacity-80">Score</span>
-              <div className="text-xl font-bold">{score}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera View */}
+      <div className="p-4 pt-32">
+        <div className="max-w-4xl mx-auto">
+          <div className={getVideoContainerClass()}>
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="w-full h-[60vh] md:h-[70vh] object-cover transform scale-x-[-1]"
+            />
+            <canvas
+              ref={canvasRef}
+              className="absolute top-0 left-0 w-full h-full pointer-events-none transform scale-x-[-1]"
+            />
+            
+            {/* Position Indicators */}
+            <div className={`absolute top-1/2 left-6 transform -translate-y-1/2 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all duration-300 ${
+              currentPosition === 'left' ? 'bg-red-500 scale-110 shadow-lg' : 'bg-red-500/40'
+            }`}>
+              NO
             </div>
-            {streak > 1 && (
-              <div className="text-white">
-                <span className="text-sm opacity-80">Streak</span>
-                <div className="text-xl font-bold text-yellow-400">{streak}🔥</div>
+            <div className={`absolute top-1/2 right-6 transform -translate-y-1/2 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all duration-300 ${
+              currentPosition === 'right' ? 'bg-green-500 scale-110 shadow-lg' : 'bg-green-500/40'
+            }`}>
+              YES
+            </div>
+
+            {/* Progress Bar */}
+            {holdProgress > 0 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-64 bg-white/20 rounded-full h-3 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-100 ${
+                    currentPosition === 'left' ? 'bg-red-400' : 'bg-green-400'
+                  }`}
+                  style={{ width: `${holdProgress}%` }}
+                />
               </div>
             )}
-          </div>
-          
-          <div className="flex items-center space-x-2 text-white">
-            <Timer size={20} />
-            <span className={`text-xl font-bold ${timeLeft <= 3 ? 'text-red-400' : ''}`}>
-              {timeLeft}s
-            </span>
+
+            {/* Face Detection Status */}
+            {!faceDetected && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-2xl">
+                <div className="text-white text-center p-4">
+                  <Camera size={48} className="mx-auto mb-2" />
+                  <div className="text-xl font-bold">Position your face in the camera</div>
+                  <div className="text-sm opacity-80">Make sure you're in good lighting</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-6">
-        {/* Question Panel */}
-        <div className="space-y-6">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              {questions[currentQuestion].question}
-            </h2>
-            
-            <div className="grid grid-cols-2 gap-4 mt-6">
-              <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                headPosition === 'left' 
-                  ? 'border-red-400 bg-red-500/20' 
-                  : 'border-white/20 bg-white/5'
-              }`}>
-                <div className="flex items-center space-x-2 text-white">
-                  <XCircle size={24} className="text-red-400" />
-                  <span className="font-semibold">FALSE</span>
-                </div>
-                <div className="text-sm text-white/80 mt-1">Lean LEFT</div>
-              </div>
-              
-              <div className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                headPosition === 'right' 
-                  ? 'border-green-400 bg-green-500/20' 
-                  : 'border-white/20 bg-white/5'
-              }`}>
-                <div className="flex items-center space-x-2 text-white">
-                  <CheckCircle size={24} className="text-green-400" />
-                  <span className="font-semibold">TRUE</span>
-                </div>
-                <div className="text-sm text-white/80 mt-1">Lean RIGHT</div>
-              </div>
-            </div>
-
-            {selectedAnswer !== null && (
-              <div className="mt-6 p-4 bg-white/10 rounded-xl">
-                <div className={`text-lg font-semibold ${
-                  selectedAnswer === 'timeout' ? 'text-yellow-400' :
-                  selectedAnswer === questions[currentQuestion].answer ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {selectedAnswer === 'timeout' ? 'Time\'s up!' :
-                   selectedAnswer === questions[currentQuestion].answer ? 'Correct!' : 'Incorrect!'}
-                </div>
-                <div className="text-white/80 text-sm mt-2">
-                  {questions[currentQuestion].explanation}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Camera Panel */}
-        <div className="space-y-6">
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
-            <h3 className="text-xl font-bold text-white mb-4">Camera View</h3>
-            
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-64 bg-black rounded-xl object-cover"
-              />
-              <canvas
-                ref={canvasRef}
-                className="hidden"
-              />
-              
-              {/* Head position indicator */}
-              <div className="absolute top-4 left-4 right-4">
-                <div className="flex justify-between items-center">
-                  <div className={`w-3 h-3 rounded-full ${
-                    headPosition === 'left' ? 'bg-red-400' : 'bg-white/30'
-                  }`}></div>
-                  <div className={`w-3 h-3 rounded-full ${
-                    headPosition === 'center' ? 'bg-blue-400' : 'bg-white/30'
-                  }`}></div>
-                  <div className={`w-3 h-3 rounded-full ${
-                    headPosition === 'right' ? 'bg-green-400' : 'bg-white/30'
-                  }`}></div>
-                </div>
-              </div>
-
-              {/* Movement indicator */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                <div className="bg-black/50 text-white px-3 py-1 rounded-full text-sm">
-                  {headPosition === 'left' ? '← Lean Left' :
-                   headPosition === 'right' ? 'Lean Right →' :
-                   'Center'}
-                </div>
-              </div>
-            </div>
+      {/* Instructions */}
+      <div className="absolute bottom-4 left-0 right-0 p-4">
+        <div className="max-w-2xl mx-auto text-center">
+          <div className="bg-white/10 backdrop-blur-lg rounded-xl p-3 border border-white/20">
+            <p className="text-white text-sm">
+              Hold your head position for 1.5 seconds to confirm your answer
+            </p>
           </div>
         </div>
       </div>

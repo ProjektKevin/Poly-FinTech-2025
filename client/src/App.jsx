@@ -1,13 +1,18 @@
 // src/App.jsx
 import React from 'react';
-import IndexPage from './pages/IndexPage';
 import './styles/index.css';
+import IndexPage from './pages/IndexPage'
+import GamePage from './pages/GamePage';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="App">
-      <IndexPage />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<IndexPage />} />
+        <Route path="/game" element={<GamePage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
