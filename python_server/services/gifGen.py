@@ -116,37 +116,70 @@ def text_to_speech(text, output_path):
     engine.runAndWait()
     print(f"Audio saved to {output_path}")
 
-def create_video_with_audio(local_gif_paths, audio_path, output_path, duration):
+def create_video_with_audio(local_gif_paths, audio_path, request_id, duration=30):
+    filename = f"video_{request_id}.mp4"
+    output_path = os.path.join(VIDEOS_PATH, filename)
     try:
-        clips = [mp.VideoFileClip(gif).set_duration(5) for gif in local_gif_paths]
-        video_clip = mp.concatenate_videoclips(clips, method="compose")
+        # Create clips with no gaps
+        clips = []
+        for gif_path in local_gif_paths:
+            clip = VideoFileClip(gif_path)
+            # Remove any potential audio from GIFs
+            clip = clip.without_audio()
+            # Set fixed duration
+            clip = clip.with_duration(5)
+            clips.append(clip)
+        
+        # Concatenate with method="chain" for seamless transitions
+        video_clip = concatenate_videoclips(clips, method="chain")
         
         # Loop the video if it's shorter than the desired duration
         if video_clip.duration < duration:
             video_clip = video_clip.loop(duration=duration)
         
         # Trim the video clip to exactly match the desired duration
-        video_clip = video_clip.subclip(0, duration)
+        video_clip = video_clip.subclipped(0, duration)
 
         # Load the audio file
-        audio_clip = mp.AudioFileClip(audio_path)
+        audio_clip = AudioFileClip(audio_path)
 
-        # If audio is longer than video, trim it
+        # Adjust audio duration to match video
         if audio_clip.duration > video_clip.duration:
-            audio_clip = audio_clip.subclip(0, video_clip.duration)
-        
-        # If audio is shorter than video, loop it
+            audio_clip = audio_clip.subclipped(0, video_clip.duration)
         elif audio_clip.duration < video_clip.duration:
-            audio_clip = audio_clip.loop(duration=video_clip.duration)
+            loops_needed = int(video_clip.duration / audio_clip.duration) + 1
+            audio_clips = [audio_clip] * loops_needed
+            audio_clip = concatenate_audioclips(audio_clips).subclipped(0, video_clip.duration)
 
         # Set the audio of the video clip
-        final_clip = video_clip.set_audio(audio_clip)
+        final_clip = video_clip.with_audio(audio_clip)
 
-        final_clip.write_videofile(output_path, fps=24)
+        # Write with optimized settings for smooth playback
+        final_clip.write_videofile(
+            output_path, 
+            fps=24,
+            codec='libx264',
+            audio_codec='aac',
+            temp_audiofile='temp-audio.m4a',
+            remove_temp=True,
+            verbose=False,
+            logger=None
+        )
+        
+        # Clean up clips to free memory
+        for clip in clips:
+            clip.close()
+        video_clip.close()
+        audio_clip.close()
+        final_clip.close()
+        
         print(f"Video with audio created successfully at {output_path}")
+        return output_path
     except Exception as e:
         print(f"An error occurred while creating the video with audio: {str(e)}")
-
+        return None
+    
+    
 def main(pdf_path):
     summary_text = process_pdf(pdf_path)
     if summary_text:
